@@ -1,13 +1,13 @@
 import ox
-from types import SimpleNamespace
 import click
+import pprint
+from types import SimpleNamespace
 
 lexer = ox.make_lexer([
     ('NAME',r'[a-zA-Z]+'),
     ('NUMBER', r'\d+'),
     ('OPENING_PARENTHESES', r'\('),
     ('CLOSING_PARENTHESES', r'\)'),
-    ('COMMA',r'\,'),
 ])
 
 tokens_list = ['NUMBER', 'NAME','OPENING_PARENTHESES','CLOSING_PARENTHESES','COMMA']
@@ -26,28 +26,38 @@ parser = ox.make_parser([
     ('atom : NAME',lambda name : name),
 ], tokens_list)
 
+def pretty_print(code_p):
+    tokens = lexer(code_p)
+    print("Tokens: ", tokens)
+
+    pretty_p = pprint.PrettyPrinter(indent=4, width=6)
+    pretty_p.pprint(tokens)
+
+
 @click.command()
 @click.argument('entry_file_name')
 
 def read_file(entry_file_name):
     input_file = open(entry_file_name, 'r')
-    
-    args = SimpleNamespace(tokens=[]) 
+
+    args = SimpleNamespace(tokens=[])
 
     for line in input_file:
         ind = line.find(';')
-        if(ind != -1):
-            line = line[:ind] 
-                                
+
+        if(ind != -1 or line.find('\n') != -1):
+            line = line[:ind]
+
         args.tokens.append(line)
-                                                                                
+
+    code = ''.join(args.tokens)
+
+    pretty_print(code)
+    # tokens = lexer(code)
+    # print("Tokens: ", tokens)
+    # ast = parser(tokens)
+    # print("AST: ",ast)
+
     input_file.close()
 
-    print(args.tokens)  
-
 read_file()
-#code = input('Enter lisp_f_ck code: ')
-#tokens = lexer(code)
-#print("Tokens: ",tokens)
-#ast = parser(tokens)
-#print("AST: ",ast)
