@@ -1,4 +1,6 @@
 import ox
+from types import SimpleNamespace
+import click
 
 lexer = ox.make_lexer([
     ('NAME',r'[a-zA-Z]+'),
@@ -24,8 +26,28 @@ parser = ox.make_parser([
     ('atom : NAME',lambda name : name),
 ], tokens_list)
 
-code = input('Enter lisp_f_ck code: ')
-tokens = lexer(code)
-print("Tokens: ",tokens)
-ast = parser(tokens)
-print("AST: ",ast)
+@click.command()
+@click.argument('entry_file_name')
+
+def read_file(entry_file_name):
+    input_file = open(entry_file_name, 'r')
+    
+    args = SimpleNamespace(tokens=[]) 
+
+    for line in input_file:
+        ind = line.find(';')
+        if(ind != -1):
+            line = line[:ind] 
+                                
+        args.tokens.append(line)
+                                                                                
+    input_file.close()
+
+    print(args.tokens)  
+
+read_file()
+#code = input('Enter lisp_f_ck code: ')
+#tokens = lexer(code)
+#print("Tokens: ",tokens)
+#ast = parser(tokens)
+#print("AST: ",ast)
