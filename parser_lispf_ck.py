@@ -1,7 +1,5 @@
 import ox
 import click
-import pprint
-from types import SimpleNamespace
 
 lexer = ox.make_lexer([
     ('NAME',r'[a-zA-Z]+'),
@@ -12,7 +10,7 @@ lexer = ox.make_lexer([
 
 tokens_list = ['NUMBER', 'NAME','OPENING_PARENTHESES','CLOSING_PARENTHESES','COMMA']
 
-atom_number = lambda value: ('atom_number',float(value))
+atom_number = lambda value: ('atom_number', float(value))
 
 parser = ox.make_parser([
     ('simple_block : simple_block simple_term', lambda first, second: (first, second)),
@@ -27,12 +25,25 @@ parser = ox.make_parser([
 ], tokens_list)
 
 def pretty_print(code_p):
-    tokens = lexer(code_p)
-    print("Tokens: ", tokens)
+    indent = 0
 
-    pretty_p = pprint.PrettyPrinter(indent=4, width=6)
-    pretty_p.pprint(tokens)
-
+    for element in code_p:
+        if(element.find('(') != -1):
+            if(not indent):
+                print(lexer(element))
+                indent += 4
+            else:
+                print((' ' * indent) + str(lexer(element)))
+                indent += 4
+        elif(element == ")"):
+            indent -= 4
+            print((' ' * indent) + str(lexer(element)))
+        elif(element.find(')') != -1):
+            print((' ' * indent) + str(lexer(element)))
+            indent -= 4
+            open_parentheses = 0
+        else:
+            print((' ' * indent) + str(lexer(element)))
 
 @click.command()
 @click.argument('entry_file_name')
@@ -40,7 +51,8 @@ def pretty_print(code_p):
 def read_file(entry_file_name):
     input_file = open(entry_file_name, 'r')
 
-    args = SimpleNamespace(tokens=[])
+    args = []
+    args_p = []
 
     for line in input_file:
         ind = line.find(';')
@@ -48,15 +60,15 @@ def read_file(entry_file_name):
         if(ind != -1 or line.find('\n') != -1):
             line = line[:ind]
 
-        args.tokens.append(line)
+        args.append(line)
 
-    code = ''.join(args.tokens)
+    for element in args:
+        element_p = element.replace('    ', '')
+        args_p.append(element_p)
 
+    code = ' '.join(args_p)
+    code = code.split()
     pretty_print(code)
-    # tokens = lexer(code)
-    # print("Tokens: ", tokens)
-    # ast = parser(tokens)
-    # print("AST: ",ast)
 
     input_file.close()
 
